@@ -1,2 +1,5 @@
 # Ignore output directory
 /output/
+
+# Ignore generated HTML output files
+output.html
