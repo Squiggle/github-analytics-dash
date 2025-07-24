@@ -1,8 +1,5 @@
-// github_fetch.ts
-// Module to fetch pull requests from GitHub API for a given repository and time window
-
-
-export const DEFAULT_DAYS = 30;
+// github_pull_requests.ts
+// Fetch recent pull requests from GitHub
 
 export interface PullRequest {
   id: number;
@@ -23,7 +20,7 @@ export interface PullRequest {
 export async function fetchRecentPullRequests(
   apiKey: string,
   repoName: string,
-  days: number = DEFAULT_DAYS
+  days: number
 ): Promise<PullRequest[]> {
   const perPage = 100;
   let page = 1;

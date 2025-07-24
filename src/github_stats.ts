@@ -15,7 +15,7 @@ if (!GITHUB_API_KEY || !GITHUB_PROJECT_NAME) {
 }
 
 
-import { fetchRecentPullRequests, DEFAULT_DAYS } from "./github_fetch.ts";
+import { GitHubAnalytics } from "./github_api/github_analytics.ts";
 
 function formatDate(dateString: string): string {
   const date = new Date(dateString);
@@ -68,11 +68,11 @@ function generateHTML(pulls: any[]): string {
 
 async function main() {
   try {
-    const pulls = await fetchRecentPullRequests(
+    const analytics = new GitHubAnalytics(
       GITHUB_API_KEY!,
-      GITHUB_PROJECT_NAME!,
-      DEFAULT_DAYS
+      GITHUB_PROJECT_NAME!
     );
+    const pulls = await analytics.fetchRecentPullRequests();
     const html = generateHTML(pulls);
 
     // Ensure output directory exists

@@ -1,15 +1,10 @@
-// github_fetch.test.ts
-// Deno tests for fetchRecentPullRequests in github_fetch.ts
-
-import {
-  fetchRecentPullRequests,
-  DEFAULT_DAYS,
-  PullRequest
-} from "./github_fetch.ts";
+// github_pull_requests.test.ts
+// Deno tests for fetchRecentPullRequests
+import { fetchRecentPullRequests, PullRequest } from "./github_pull_requests.ts";
 
 // Always mock fetch for tests
 // @ts-ignore
-globalThis.fetch = async (url: string, opts: any) => {
+(globalThis as any).fetch = async (url: string, opts: any) => {
   // Simulate a single page of PRs, some within and some outside the window
   const now = new Date();
   const prWithin: PullRequest = {
