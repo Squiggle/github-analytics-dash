@@ -1,12 +1,13 @@
-/// <reference lib="deno.ns" />
 
 // github_stats.ts
 // Deno script to fetch latest pull requests for a GitHub repository and output as a self-contained HTML file
 
 export {};
 
+
 const GITHUB_API_KEY = Deno.env.get("GITHUB_API_KEY");
 const GITHUB_PROJECT_NAME = Deno.env.get("GITHUB_PROJECT_NAME");
+const OUTPUT_DIR = Deno.env.get("OUTPUT_DIR") || ".";
 
 if (!GITHUB_API_KEY || !GITHUB_PROJECT_NAME) {
   console.error("Missing GITHUB_API_KEY or GITHUB_PROJECT_NAME environment variable.");
@@ -78,8 +79,12 @@ async function main() {
     }
     const pulls = await response.json();
     const html = generateHTML(pulls);
-    await Deno.writeTextFile("output.html", html);
-    console.log("HTML file generated: output.html");
+
+    // Ensure output directory exists
+    await Deno.mkdir(OUTPUT_DIR, { recursive: true });
+    const outputPath = `${OUTPUT_DIR.replace(/\/$/, "")}/output.html`;
+    await Deno.writeTextFile(outputPath, html);
+    console.log(`HTML file generated: ${outputPath}`);
   } catch (err) {
     console.error("Failed to fetch pull requests or write HTML:", err.message);
     Deno.exit(1);
