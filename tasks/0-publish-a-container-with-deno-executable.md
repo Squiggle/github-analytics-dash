@@ -3,7 +3,7 @@
 3. [x] Accept `GITHUB_API_KEY` and `GITHUB_PROJECT_NAME` as environment variables in the script
 4. [x] Write the generated HTML file to a specified output directory
 5. [x] Create a Dockerfile that installs Deno and copies the TypeScript script into the container
-6. [ ] Configure the Dockerfile to accept environment variables and mount a directory for output
+6. [x] Configure the Dockerfile to accept environment variables and mount a directory for output
 7. [ ] Ensure the container runs the Deno script once and exits
 8. [ ] Test the container locally by running it with sample environment variables and a mounted output directory
 9. [ ] Write documentation on how to build, run, and use the container for development
