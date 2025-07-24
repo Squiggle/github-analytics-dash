@@ -1,5 +1,5 @@
-1. [ ] Create a TypeScript script that uses Deno to fetch GitHub project statistics using the GitHub API
-2. [ ] Implement logic in the script to generate a single self-contained HTML file as output
+1. [x] Create a TypeScript script that uses Deno to fetch GitHub project statistics using the GitHub API
+2. [x] Implement logic in the script to generate a single self-contained HTML file as output
 3. [ ] Accept `GITHUB_API_KEY` and `GITHUB_PROJECT_NAME` as environment variables in the script
 4. [ ] Write the generated HTML file to a specified output directory
 5. [ ] Create a Dockerfile that installs Deno and copies the TypeScript script into the container
