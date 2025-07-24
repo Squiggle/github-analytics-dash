@@ -14,13 +14,8 @@ if (!GITHUB_API_KEY || !GITHUB_PROJECT_NAME) {
   Deno.exit(1);
 }
 
-const apiUrl = `https://api.github.com/repos/${GITHUB_PROJECT_NAME}/pulls?per_page=10`;
 
-const headers = {
-  "Authorization": `token ${GITHUB_API_KEY}`,
-  "Accept": "application/vnd.github.v3+json",
-  "User-Agent": "github-analytics-dash"
-};
+import { fetchRecentPullRequests, DEFAULT_DAYS } from "./github_fetch.ts";
 
 function formatDate(dateString: string): string {
   const date = new Date(dateString);
@@ -73,11 +68,11 @@ function generateHTML(pulls: any[]): string {
 
 async function main() {
   try {
-    const response = await fetch(apiUrl, { headers });
-    if (!response.ok) {
-      throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
-    }
-    const pulls = await response.json();
+    const pulls = await fetchRecentPullRequests(
+      GITHUB_API_KEY!,
+      GITHUB_PROJECT_NAME!,
+      DEFAULT_DAYS
+    );
     const html = generateHTML(pulls);
 
     // Ensure output directory exists
