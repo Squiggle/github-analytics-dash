@@ -6,6 +6,6 @@
 6. [x] Configure the Dockerfile to accept environment variables and mount a directory for output
 7. [x] Ensure the container runs the Deno script once and exits
 8. [x] Test the container locally by running it with sample environment variables and a mounted output directory
-9. [ ] Write documentation on how to build, run, and use the container for development
-10. [ ] Publish the container to GitHub Container Registry (GHR)
+9. [x] Write documentation on how to build, run, and use the container for development
+10. [x] Publish the container to GitHub Container Registry (GHR)
 11. [ ] Verify the container can be pulled and used in a GitHub Action workflow
