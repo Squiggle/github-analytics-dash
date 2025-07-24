@@ -4,7 +4,7 @@
 4. [x] Write the generated HTML file to a specified output directory
 5. [x] Create a Dockerfile that installs Deno and copies the TypeScript script into the container
 6. [x] Configure the Dockerfile to accept environment variables and mount a directory for output
-7. [ ] Ensure the container runs the Deno script once and exits
+7. [x] Ensure the container runs the Deno script once and exits
 8. [ ] Test the container locally by running it with sample environment variables and a mounted output directory
 9. [ ] Write documentation on how to build, run, and use the container for development
 10. [ ] Publish the container to GitHub Container Registry (GHR)
