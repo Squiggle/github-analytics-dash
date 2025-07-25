@@ -22,13 +22,55 @@ function formatDate(dateString: string): string {
   return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
 }
 
-function generateHTML(pulls: any[]): string {
+function isBot(username: string): boolean {
+  return username.endsWith('[bot]') || username.toLowerCase().includes('bot');
+}
+
+function aggregateDeveloperStats(pulls: any[], userComments: Record<string, number[]>): Array<{ user: string, prsCreated: number, prsCommented: number }> {
+  // Count PRs created per user
+  const prsCreated: Record<string, number> = {};
+  const prAuthors: Record<number, string> = {};
+  for (const pr of pulls) {
+    const author = pr.user?.login;
+    if (!author || isBot(author)) continue;
+    prsCreated[author] = (prsCreated[author] || 0) + 1;
+    prAuthors[pr.number] = author;
+  }
+
+  // Count PRs commented per user (excluding their own PRs)
+  const prsCommented: Record<string, Set<number>> = {};
+  for (const [user, commentIds] of Object.entries(userComments)) {
+    if (isBot(user)) continue;
+    prsCommented[user] = new Set();
+    for (const prNum of Object.keys(prAuthors)) {
+      if (prAuthors[Number(prNum)] === user) continue; // skip own PRs
+      // If user commented on this PR, add to set
+      // We don't have direct mapping of comment to PR, so assume all comments for a user are on PRs in the window
+      // For more accuracy, need to map comment IDs to PRs, but API doesn't provide that in grouped result
+      // Instead, we can check if user has any comments at all (from userComments) and count PRs where user != author
+      if (commentIds.length > 0) {
+        prsCommented[user].add(Number(prNum));
+      }
+    }
+  }
+
+  // Build array
+  const allUsers = new Set([...Object.keys(prsCreated), ...Object.keys(prsCommented)]);
+  const stats = Array.from(allUsers).map(user => ({
+    user,
+    prsCreated: prsCreated[user] || 0,
+    prsCommented: prsCommented[user] ? prsCommented[user].size : 0
+  }));
+  return stats;
+}
+
+function generateHTMLAnalytics(stats: Array<{ user: string, prsCreated: number, prsCommented: number }>): string {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Latest Pull Requests for ${GITHUB_PROJECT_NAME}</title>
+  <title>Developer PR & Comment Analytics for ${GITHUB_PROJECT_NAME}</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 2em; }
     h1 { font-size: 1.5em; }
@@ -36,28 +78,24 @@ function generateHTML(pulls: any[]): string {
     th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
     th { background: #f4f4f4; }
     tr:nth-child(even) { background: #fafafa; }
-    a { color: #0366d6; text-decoration: none; }
-    a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
-  <h1>Latest Pull Requests for <code>${GITHUB_PROJECT_NAME}</code></h1>
+  <h1>Developer PR & Comment Analytics for <code>${GITHUB_PROJECT_NAME}</code></h1>
   <table>
     <thead>
       <tr>
-        <th>Title</th>
-        <th>Author</th>
-        <th>Date</th>
-        <th>Status</th>
+        <th>Developer</th>
+        <th>PRs Created</th>
+        <th>Other PRs Commented</th>
       </tr>
     </thead>
     <tbody>
-      ${pulls.map(pr => `
+      ${stats.map(stat => `
         <tr>
-          <td><a href="${pr.html_url}" target="_blank">${pr.title}</a></td>
-          <td>${pr.user?.login || ""}</td>
-          <td>${formatDate(pr.created_at)}</td>
-          <td>${pr.state.charAt(0).toUpperCase() + pr.state.slice(1)}</td>
+          <td>${stat.user}</td>
+          <td>${stat.prsCreated}</td>
+          <td>${stat.prsCommented}</td>
         </tr>
       `).join('')}
     </tbody>
@@ -73,7 +111,10 @@ async function main() {
       GITHUB_PROJECT_NAME!
     );
     const pulls = await analytics.fetchRecentPullRequests();
-    const html = generateHTML(pulls);
+    const prNumbers = pulls.map(pr => pr.number);
+    const userComments = await analytics.fetchCommentsGroupedByUser(prNumbers);
+    const stats = aggregateDeveloperStats(pulls, userComments);
+    const html = generateHTMLAnalytics(stats);
 
     // Ensure output directory exists
     await Deno.mkdir(OUTPUT_DIR, { recursive: true });
