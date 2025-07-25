@@ -5,7 +5,7 @@ FROM denoland/deno:alpine-1.44.0
 WORKDIR /app
 
 # Copy the TypeScript script and any supporting files
-COPY src/github_stats.ts ./
+COPY src/ ./
 
 # Set permissions (optional, for some environments)
 RUN chmod 755 github_stats.ts
