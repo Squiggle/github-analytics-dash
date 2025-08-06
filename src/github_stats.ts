@@ -16,6 +16,7 @@ if (!GITHUB_API_KEY || !GITHUB_PROJECT_NAME) {
 
 
 import { GitHubAnalytics } from "./github_api/github_analytics.ts";
+import * as Eta from "eta";
 
 function formatDate(dateString: string): string {
   const date = new Date(dateString);
@@ -64,44 +65,27 @@ function aggregateDeveloperStats(pulls: any[], userComments: Record<string, numb
   return stats;
 }
 
-function generateHTMLAnalytics(stats: Array<{ user: string, prsCreated: number, prsCommented: number }>): string {
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Developer PR & Comment Analytics for ${GITHUB_PROJECT_NAME}</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 2em; }
-    h1 { font-size: 1.5em; }
-    table { border-collapse: collapse; width: 100%; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-    th { background: #f4f4f4; }
-    tr:nth-child(even) { background: #fafafa; }
-  </style>
-</head>
-<body>
-  <h1>Developer PR & Comment Analytics for <code>${GITHUB_PROJECT_NAME}</code></h1>
-  <table>
-    <thead>
-      <tr>
-        <th>Developer</th>
-        <th>PRs Created</th>
-        <th>Other PRs Commented</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${stats.map(stat => `
-        <tr>
-          <td>${stat.user}</td>
-          <td>${stat.prsCreated}</td>
-          <td>${stat.prsCommented}</td>
-        </tr>
-      `).join('')}
-    </tbody>
-  </table>
-</body>
-</html>`;
+async function generateHTMLAnalytics(stats: Array<{ user: string, prsCreated: number, prsCommented: number }>): Promise<string> {
+  // Render row components
+  const rowTemplates = await Promise.all(stats.map(async stat => {
+    return await Eta.renderFile("./templates/row.eta", {
+      user: stat.user,
+      prsCreated: stat.prsCreated,
+      prsCommented: stat.prsCommented
+    });
+  }));
+
+  // Render table component
+  const table = await Eta.renderFile("./templates/table.eta", {
+    rows: rowTemplates.join("")
+  });
+
+  // Render layout component
+  const html = await Eta.renderFile("./templates/layout.eta", {
+    projectName: GITHUB_PROJECT_NAME,
+    table
+  });
+  return html as string;
 }
 
 async function main() {
@@ -114,7 +98,7 @@ async function main() {
     const prNumbers = pulls.map(pr => pr.number);
     const userComments = await analytics.fetchCommentsGroupedByUser(prNumbers);
     const stats = aggregateDeveloperStats(pulls, userComments);
-    const html = generateHTMLAnalytics(stats);
+    const html = await generateHTMLAnalytics(stats);
 
     // Ensure output directory exists
     await Deno.mkdir(OUTPUT_DIR, { recursive: true });
